@@ -21,7 +21,7 @@ def SpeakText(command):
 # Loop infinitely for user to
 # speak
 
-while (1):
+while True:
 
     # Exception handling to handle
     # exceptions at the runtime
