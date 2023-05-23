@@ -1,4 +1,9 @@
-Speech to text: https://www.geeksforgeeks.org/python-convert-speech-to-text-and-text-to-speech/
+Speech to text:
+https://www.geeksforgeeks.org/python-convert-speech-to-text-and-text-to-speech/
+https://github.com/AssemblyAI/youtube-tutorials/blob/main/real-time-python/main.py
 
-Real time sound plotting: https://medium.com/geekculture/real-time-audio-wave-visualization-in-python-b1c5b96e2d39
+Real time sound plotting:
+https://medium.com/geekculture/real-time-audio-wave-visualization-in-python-b1c5b96e2d39
 
+Text to speech:
+https://python.plainenglish.io/how-to-convert-text-to-speech-in-python-c9aeaaf8d2c1
