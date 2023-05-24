@@ -129,4 +129,5 @@ def paid_speech_to_text():
     asyncio.run(send_receive())
 
 
-free_speech_to_text()
+# free_speech_to_text()
+paid_speech_to_text()
