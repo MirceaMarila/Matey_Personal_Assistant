@@ -1,9 +1,13 @@
 Speech to text:
-https://www.geeksforgeeks.org/python-convert-speech-to-text-and-text-to-speech/
 https://github.com/AssemblyAI/youtube-tutorials/blob/main/real-time-python/main.py
 
 Real time sound plotting:
 https://medium.com/geekculture/real-time-audio-wave-visualization-in-python-b1c5b96e2d39
 
 Text to speech:
-https://python.plainenglish.io/how-to-convert-text-to-speech-in-python-c9aeaaf8d2c1
+https://cloud.google.com/text-to-speech/docs/libraries
+
+
+https://cloud.google.com/text-to-speech/docs/samples/tts-synthesize-text-audio-profile
+https://cloud.google.com/sdk/docs/install
+https://console.cloud.google.com/billing/01A80F-F43B0C-3B99B2?project=circular-shore-387615&authuser=1

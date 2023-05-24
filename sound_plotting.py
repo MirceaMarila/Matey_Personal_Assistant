@@ -1,125 +1,112 @@
-import PySimpleGUI as sg
-import pyaudio
-import numpy as np
+import os
+from PIL import Image
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
+import librosa
+import timeit
+import random
+from multiprocessing import Pool
+from tqdm import tqdm
 
 
-""" Microphone waveform display with Pyaudio, Pyplot and PysimpleGUI """
+def load_song(song_path):
+    y = librosa.load(song_path)
+    data = y[0]
+    sample_rate = y[1]
 
-# VARS CONSTS:
-_VARS = {'window': False,
-         'stream': False,
-         'fig_agg': False,
-         'pltFig': False,
-         'xData': False,
-         'yData': False,
-         'audioData': np.array([])}
-
-# pysimpleGUI INIT:
-AppFont = 'Any 16'
-sg.theme('DarkTeal2')
-layout = [[sg.Canvas(key='figCanvas')],
-          [sg.ProgressBar(4000, orientation='h',
-                          size=(60, 20), key='-PROG-')],
-          [sg.Button('Listen', font=AppFont),
-           sg.Button('Stop', font=AppFont, disabled=True),
-           sg.Button('Exit', font=AppFont)]]
-_VARS['window'] = sg.Window('Microphone Waveform Pyplot',
-                            layout, finalize=True,
-                            location=(400, 100))
+    return np.array(data), sample_rate
 
 
-# PyAudio INIT:
-CHUNK = 1024  # Samples: 1024,  512, 256, 128
-RATE = 44100  # Equivalent to Human Hearing at 40 kHz
-INTERVAL = 1  # Sampling Interval in Seconds ie Interval to listen
-TIMEOUT = 10  # In ms for the event loop
-pAud = pyaudio.PyAudio()
+def plot_voice_frame(y):
+    img_path = "images\\sphere.png"
+    img = Image.open(img_path)
+    width = img.width
+    height = img.height
 
-# \\  -------- PYPLOT -------- //
+    x = np.linspace(0, len(y), len(y))
+    img = plt.imread(img_path)
+    plt.imshow(img, extent=[0, width, -height/2, height/2])
+    plt.axis('off')
+    # plt.rcParams['toolbar'] = 'None'
+    # plt.style.use('dark_background')
 
-
-def draw_figure(canvas, figure):
-    figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
-    figure_canvas_agg.draw()
-    figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
-    return figure_canvas_agg
-
-
-def drawPlot():
-    _VARS['pltFig'] = plt.figure()
-    plt.plot(_VARS['xData'], _VARS['yData'], '--k')
-    plt.ylim(-4000, 4000)
-    _VARS['fig_agg'] = draw_figure(
-        _VARS['window']['figCanvas'].TKCanvas, _VARS['pltFig'])
-
-# See also the following for alternatives to updating pyplot in a
-# more performant way:
-# https://stackoverflow.com/questions/4098131/how-to-update-a-plot-in-matplotlib
+    plt.plot(x, y*50, color="white")
+    plt.ylim(-height/2, height/2)
+    plt.xlim(0, width)
 
 
-def updatePlot(data):
-    _VARS['fig_agg'].get_tk_widget().forget()
-    plt.cla()
-    plt.clf()
-    plt.plot(_VARS['xData'], data, '--k')
-    plt.ylim(-4000, 4000)
-    _VARS['fig_agg'] = draw_figure(
-        _VARS['window']['figCanvas'].TKCanvas, _VARS['pltFig'])
-
-# \\  -------- PYPLOT -------- //
-
-# FUNCTIONS:
+def plot_and_show_voice(voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds):
+    for i, j in zip(range(0, int(sample_rate * nr_of_seconds), tick_samples),
+                    range(tick_samples, int(sample_rate * nr_of_seconds), tick_samples)):
+        aux = voice[i:j]
+        plot_voice_frame(aux)
+        plt.draw()
+        plt.pause(tick_in_seconds / 2)
+        plt.clf()
+    plt.close()
 
 
-def stop():
-    if _VARS['stream']:
-        _VARS['stream'].stop_stream()
-        _VARS['stream'].close()
-        _VARS['window']['-PROG-'].update(0)
-        _VARS['window'].FindElement('Stop').Update(disabled=True)
-        _VARS['window'].FindElement('Listen').Update(disabled=False)
+def random_search(id, n):
+    plt.ion()
+
+    voice_path = "File.wav"
+    voice, sample_rate = load_song(voice_path)
+
+    nr_of_seconds = len(voice) / sample_rate
+
+    true_value = 18.27
+    best_tick_in_seconds = None
+    best_tick_in_seconds_error = 9999999999999999999999
+
+    for _ in tqdm(range(n), position=id):
+        tick_in_seconds = random.random()
+        while tick_in_seconds == 0:
+            tick_in_seconds = random.random()
+
+        tick_samples = int(sample_rate * tick_in_seconds)
+
+        current_score_error = timeit.timeit(
+            lambda: plot_and_show_voice(voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds), number=1)
+
+        if abs(current_score_error - true_value) < best_tick_in_seconds_error:
+            best_tick_in_seconds = tick_in_seconds
+            best_tick_in_seconds_error = abs(current_score_error - true_value)
+
+    return best_tick_in_seconds, best_tick_in_seconds_error
 
 
-def callback(in_data, frame_count, time_info, status):
-    _VARS['audioData'] = np.frombuffer(in_data, dtype=np.int16)
-    return (in_data, pyaudio.paContinue)
+def get_best_tick():
+    # NR DE CORE-URI
+    nr_of_processes = 8
+
+    n = 10 ** 3
+
+    with Pool(nr_of_processes) as p:
+        results = p.starmap(random_search, [(id, n // nr_of_processes) for id in range(nr_of_processes)])
+
+    print(results)
+
+    results = list(zip(*results))
+    best_tick_in_seconds = results[0][np.argmin(np.array(results[1]))]
+    best_tick_in_seconds_error = results[1][np.argmin(np.array(results[1]))]
+
+    print(f"Best tick in seconds: {best_tick_in_seconds}\nBest tick in seconds error: {best_tick_in_seconds_error}")
 
 
-def listen():
-    _VARS['window'].FindElement('Stop').Update(disabled=False)
-    _VARS['window'].FindElement('Listen').Update(disabled=True)
-    _VARS['stream'] = pAud.open(format=pyaudio.paInt16,
-                                channels=1,
-                                rate=RATE,
-                                input=True,
-                                frames_per_buffer=CHUNK,
-                                stream_callback=callback)
+def plot_voice():
+    plt.ion()
+    # voice_path = "File.wav"
+    voice_path = "audio\\hello.mp3"
 
-    _VARS['stream'].start_stream()
+    voice, sample_rate = load_song(voice_path)
+    nr_of_seconds = len(voice) / sample_rate
+    tick_in_seconds = 0.04
 
-
-# INIT Pyplot:
-plt.style.use('ggplot')
-_VARS['xData'] = np.linspace(0, CHUNK, num=CHUNK, dtype=int)
-_VARS['yData'] = np.zeros(CHUNK)
-drawPlot()
+    tick_samples = int(sample_rate * tick_in_seconds)
+    # os.startfile(voice_path)
+    plot_and_show_voice(voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
 
 
-# MAIN LOOP
-while True:
-    event, values = _VARS['window'].read(timeout=TIMEOUT)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        stop()
-        pAud.terminate()
-        break
-    if event == 'Listen':
-        listen()
-    elif event == 'Stop':
-        stop()
-    elif _VARS['audioData'].size != 0:
-        _VARS['window']['-PROG-'].update(np.amax(_VARS['audioData']))
-        updatePlot(_VARS['audioData'])
-
-_VARS['window'].close()
+if __name__ == '__main__':
+    # get_best_tick()
+    print(timeit.timeit(plot_voice, number=1))
