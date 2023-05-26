@@ -7,7 +7,11 @@ https://medium.com/geekculture/real-time-audio-wave-visualization-in-python-b1c5
 Text to speech:
 https://cloud.google.com/text-to-speech/docs/libraries
 
+Sounds:
+https://pixabay.com/sound-effects
+https://github.com/anars/blank-audio/blob/master/1-second-of-silence.mp3
 
+Google api credentials:
 https://cloud.google.com/text-to-speech/docs/samples/tts-synthesize-text-audio-profile
 https://cloud.google.com/sdk/docs/install
 https://console.cloud.google.com/billing/01A80F-F43B0C-3B99B2?project=circular-shore-387615&authuser=1

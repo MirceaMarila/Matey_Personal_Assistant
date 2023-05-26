@@ -1,7 +1,7 @@
 from google.cloud import texttospeech
 
 
-def text_to_wav(text: str):
+def text_to_wav(text: str, audio_name):
     # Instantiates a client
     client = texttospeech.TextToSpeechClient()
 
@@ -20,14 +20,11 @@ def text_to_wav(text: str):
     response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
     # The response's audio_content is binary.
-    with open("audio\\hello.mp3", "wb") as out:
+    with open(f"../audio/{audio_name}.mp3", "wb") as out:
         # Write the response to the output file.
         out.write(response.audio_content)
         print('Audio content written to file "output.mp3"')
 
 
-text = """Late at night, guards on the battlements of Denmark's Elsinore castle are met by Horatio, Prince Hamlet's friend from school. The guards describe a ghost they have seen that resembles Hamlet's father, the recently-deceased king. At that moment, the Ghost reappears, and the guards and Horatio decide to tell Hamlet.
-Claudius, Hamlet's uncle, married Hamlet's recently-widowed mother, becoming the new King of Denmark. Hamlet continues to mourn for his father's death and laments his mother's lack of loyalty. When Hamlet hears of the Ghost from Horatio, he wants to see it for himself.
-Elsewhere, the royal attendant Polonius says farewell to his son Laertes, who is departing for France. Laertes warns his sister, Ophelia, away from Hamlet and thinking too much of his attentions towards her. """
-
-text_to_wav("hello")
+text = "Shutting down"
+text_to_wav(text, "shutdown")

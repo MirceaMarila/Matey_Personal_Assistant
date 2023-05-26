@@ -1,7 +1,8 @@
 # Python program to translate
 # speech to text and text to speech
 
-
+import re
+import time
 import speech_recognition as sr
 import pyttsx3
 
@@ -81,6 +82,10 @@ def paid_speech_to_text():
     # the AssemblyAI endpoint we're going to hit
     URL = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000"
 
+    speech = [""]
+    global time1
+    time1 = time.time()
+
     async def send_receive():
         print(f'Connecting websocket to url ${URL}')
         async with websockets.connect(
@@ -113,10 +118,25 @@ def paid_speech_to_text():
                 return True
 
             async def receive():
+
+                global time1
                 while True:
                     try:
                         result_str = await _ws.recv()
-                        print(json.loads(result_str)['text'])
+
+                        text = json.loads(result_str)['text']
+                        text = re.sub('[^A-Za-z0-9]+', ' ', text.strip().lower())
+                        time2 = time.time()
+
+                        if text:
+                            speech[-1] = text
+                            time1 = time2
+
+                        elif int(time2 - time1) >= 2 and speech[-1]:
+                            speech.append("")
+
+                        print(speech)
+
                     except websockets.exceptions.ConnectionClosedError as e:
                         print(e)
                         assert e.code == 4008
