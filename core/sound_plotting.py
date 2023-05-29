@@ -1,3 +1,5 @@
+import time
+
 import pylab
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -42,24 +44,27 @@ def plot_voice_frame(y):
     plt.xlim(0, width)
 
 
-def plot_and_show_voice(semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds):
-    used_semaphore = False
+def plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds):
+
     for i, j in zip(range(0, int(sample_rate * nr_of_seconds), tick_samples),
                     range(tick_samples, int(sample_rate * nr_of_seconds), tick_samples)):
         aux = voice[i:j]
         plot_voice_frame(aux)
-        if semaphore and not used_semaphore:
-            semaphore.release()
-            used_semaphore = True
+
+        if semaphore and manager_dict['semaphore']:
+            manager_dict['semaphore'] = False
+
         plt.draw()
         plt.pause(tick_in_seconds / 2)
         plt.clf()
-    plt.close()
 
 
-def plot_voice(manager_dict, semaphore=None):
+def plot_voice(manager_dict):
+
     while True:
-        if manager_dict['plot'] != "nothing":
+
+        if manager_dict['plot']:
+
             voice_name = manager_dict['plot']
             plt.ion()
             voice_path = f"{BASE_DIR}\\audio\\{voice_name}.mp3"
@@ -69,26 +74,25 @@ def plot_voice(manager_dict, semaphore=None):
             tick_in_seconds = 0.05
 
             tick_samples = int(sample_rate * tick_in_seconds)
-            # plot_and_show_voice(semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
-            used_semaphore = False
-            for i, j in zip(range(0, int(sample_rate * nr_of_seconds), tick_samples),
-                            range(tick_samples, int(sample_rate * nr_of_seconds), tick_samples)):
-                aux = voice[i:j]
-                plot_voice_frame(aux)
+            plot_and_show_voice(manager_dict, True, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
 
-                if semaphore and not used_semaphore:
-                    semaphore.release()
-                    used_semaphore = True
+            manager_dict['listen'] = True
+            manager_dict['plot'] = None
 
-                plt.draw()
-                plt.pause(tick_in_seconds / 2)
-                plt.clf()
+            if voice_name in ['welcome', 'rude'] and plt.get_fignums():
+                plt.close()
+                manager_dict['hidden'] = True
 
             else:
-                plt.close()
+                manager_dict['hidden'] = False
 
+        elif not manager_dict['hidden']:
+            plt.ion()
+            voice_path = f"{BASE_DIR}\\audio\\silence.mp3"
 
-if __name__ == '__main__':
-    # get_best_tick()
-    # print(timeit.timeit(plot_voice, number=1))
-    plot_voice("silence")
+            voice, sample_rate = load_song(voice_path)
+            nr_of_seconds = len(voice) / sample_rate
+            tick_in_seconds = 0.05
+
+            tick_samples = int(sample_rate * tick_in_seconds)
+            plot_and_show_voice(manager_dict, False, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)

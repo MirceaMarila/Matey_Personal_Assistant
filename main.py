@@ -36,7 +36,7 @@ global time1
 time1 = time.time()
 
 
-async def send_receive():
+async def send_receive(manager_dict):
     print(f'Connecting websocket to url ${URL}')
     async with websockets.connect(
             URL,
@@ -78,33 +78,44 @@ async def send_receive():
                     text = re.sub('[^A-Za-z0-9]+', ' ', text.strip().lower())
                     time2 = time.time()
 
-                    if text:
-                        speech[-1] = text
-                        time1 = time2
+                    if manager_dict['listen']:
+                        if text:
+                            speech[-1] = text
+                            time1 = time2
 
-                    elif int(time2 - time1) >= 1 and speech[-1]:
-                        if 'hey mate' in speech[-1] or 'hey matthew' in speech[-1]:
-                            play_audio("start")
-                            play_audio_and_plot_voice("hello")
+                        elif int(time2 - time1) >= 1 and speech[-1]:
+                            if manager_dict['hidden']:
+                                names = ["mate", "made", "matthew", "matt", "mattie"]
+                                for name in names:
+                                    if 'hey ' + name in speech[-1]:
+                                        manager_dict['listen'] = False
+                                        play_audio("start")
+                                        manager_dict['hidden'] = False
+                                        play_audio_and_plot_voice(manager_dict, "hello")
+                                        break
 
-                        elif 'thank you' in speech[-1]:
-                            play_audio_and_plot_voice("welcome")
-                            play_audio("exit")
+                            else:
+                                if 'thank you' in speech[-1]:
+                                    manager_dict['listen'] = False
+                                    play_audio_and_plot_voice(manager_dict, "welcome")
+                                    play_audio("exit")
 
-                        elif 'exit' in speech[-1]:
-                            play_audio_and_plot_voice("rude")
-                            play_audio("exit")
+                                elif 'exit' in speech[-1]:
+                                    manager_dict['listen'] = False
+                                    play_audio_and_plot_voice(manager_dict, "rude")
+                                    play_audio("exit")
 
-                        elif 'shut down' in speech[-1]:
-                            play_audio_and_plot_voice("shutdown")
-                            sys.exit()
+                                elif 'shut down' in speech[-1]:
+                                    manager_dict['listen'] = False
+                                    play_audio_and_plot_voice(manager_dict, "shutdown")
+                                    sys.exit()
 
-                        else:
-                            play_audio("ping")
+                                else:
+                                    play_audio("ping")
 
-                        speech.append("")
+                            speech.append("")
 
-                    print(speech)
+                        print(speech)
                     ##############################################################
 
                 except websockets.exceptions.ConnectionClosedError as e:
@@ -117,17 +128,22 @@ async def send_receive():
         send_result, receive_result = await asyncio.gather(send(), receive())
 
 
-def listen():
-    asyncio.run(send_receive())
+def listen(manager_dict):
+    asyncio.run(send_receive(manager_dict))
 
 
 if __name__ == "__main__":
     manager = Manager()
     manager_dict = manager.dict()
-    manager_dict['plot'] = 'nothing'
+    manager_dict['plot'] = None
+    manager_dict['listen'] = True
+    manager_dict['hidden'] = True
 
     listen_process = Process(target=listen, args=(manager_dict, ))
     listen_process.start()
 
     plot_process = Process(target=plot_voice, args=(manager_dict, ))
     plot_process.start()
+
+    listen_process.join()
+    plot_process.join()
