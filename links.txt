@@ -15,3 +15,12 @@ Google api credentials:
 https://cloud.google.com/text-to-speech/docs/samples/tts-synthesize-text-audio-profile
 https://cloud.google.com/sdk/docs/install
 https://console.cloud.google.com/billing/01A80F-F43B0C-3B99B2?project=circular-shore-387615&authuser=1
+
+Chat GPT api:
+https://www.codingthesmartway.com/how-to-use-chatgpt-with-python/
+
+
+
+Matey Google Account:
+matey.voice.assistant@gmail.com
+MateyVoiceAssistant
