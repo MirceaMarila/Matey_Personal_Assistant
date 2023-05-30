@@ -10,6 +10,7 @@ if __name__ == "__main__":
     manager_dict['plot'] = None
     manager_dict['listen'] = True
     manager_dict['hidden'] = True
+    manager_dict['loading'] = False
     time1 = time.time()
 
     listen_process = Process(target=listen, args=(manager_dict, time1))

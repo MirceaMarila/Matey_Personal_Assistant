@@ -23,10 +23,7 @@ def chat_gpt(search_text):
 
 
 
-
-
-
-print(chat_gpt("when did the ww1 started?"))
+# print(chat_gpt("when did the ww1 started?"))
 
 # //span[text()="Verify you are human"]/preceding-sibling::span
 # driver = ChromeDriver(options=['--incognito'])

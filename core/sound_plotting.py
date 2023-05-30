@@ -59,6 +59,18 @@ def plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_secon
         plt.clf()
 
 
+def interractive_plot_draw(manager_dict, semaphore, audio_name):
+    plt.ion()
+    voice_path = f"{BASE_DIR}\\audio\\{audio_name}.mp3"
+
+    voice, sample_rate = load_song(voice_path)
+    nr_of_seconds = len(voice) / sample_rate
+    tick_in_seconds = 0.05
+
+    tick_samples = int(sample_rate * tick_in_seconds)
+    plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
+
+
 def plot_voice(manager_dict):
 
     while True:
@@ -66,15 +78,7 @@ def plot_voice(manager_dict):
         if manager_dict['plot']:
 
             voice_name = manager_dict['plot']
-            plt.ion()
-            voice_path = f"{BASE_DIR}\\audio\\{voice_name}.mp3"
-
-            voice, sample_rate = load_song(voice_path)
-            nr_of_seconds = len(voice) / sample_rate
-            tick_in_seconds = 0.05
-
-            tick_samples = int(sample_rate * tick_in_seconds)
-            plot_and_show_voice(manager_dict, True, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
+            interractive_plot_draw(manager_dict, True, voice_name)
 
             manager_dict['listen'] = True
             manager_dict['plot'] = None
@@ -87,12 +91,13 @@ def plot_voice(manager_dict):
                 manager_dict['hidden'] = False
 
         elif not manager_dict['hidden']:
-            plt.ion()
-            voice_path = f"{BASE_DIR}\\audio\\silence.mp3"
 
-            voice, sample_rate = load_song(voice_path)
-            nr_of_seconds = len(voice) / sample_rate
-            tick_in_seconds = 0.05
+            if not manager_dict['loading']:
+                interractive_plot_draw(manager_dict, False, 'silence')
 
-            tick_samples = int(sample_rate * tick_in_seconds)
-            plot_and_show_voice(manager_dict, False, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
+            else:
+                interractive_plot_draw(manager_dict, False, 'loading')
+
+        else:
+            if plt.get_fignums():
+                plt.close()

@@ -19,8 +19,17 @@ https://console.cloud.google.com/billing/01A80F-F43B0C-3B99B2?project=circular-s
 Chat GPT api:
 https://www.codingthesmartway.com/how-to-use-chatgpt-with-python/
 
+Check internet:
+https://stackoverflow.com/questions/3764291/how-can-i-see-if-theres-an-available-and-active-network-connection-in-python
 
 
 Matey Google Account:
 matey.voice.assistant@gmail.com
 MateyVoiceAssistant
+
+
+Ideas:
+shortcuts
+weather
+play song
+

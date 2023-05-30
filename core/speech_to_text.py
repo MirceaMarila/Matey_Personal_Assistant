@@ -6,7 +6,7 @@ import base64
 import json
 import re
 import time
-from core.utils import play_audio_and_plot_voice, play_audio
+from core.utils import play_audio_and_plot_voice, play_audio, process_task
 
 auth_key = 'feff361f26e2458e9a233cd0c9292f8d'
 
@@ -80,7 +80,7 @@ async def send_receive(manager_dict, time1):
 
                         elif int(time2 - time1) >= 1 and speech[-1]:
                             if manager_dict['hidden']:
-                                names = ["mate", "made", "matthew", "matt", "mattie"]
+                                names = ["mate", "made", "matthew", "matt", "mattie", "my be", "my day"]
                                 for name in names:
                                     if 'hey ' + name in speech[-1]:
                                         manager_dict['listen'] = False
@@ -107,6 +107,8 @@ async def send_receive(manager_dict, time1):
 
                                 else:
                                     play_audio("ping")
+                                    manager_dict['listen'] = False
+                                    process_task(manager_dict, speech[-1])
 
                             speech.append("")
 

@@ -1,4 +1,5 @@
 from google.cloud import texttospeech
+from core.settings import BASE_DIR
 
 
 def text_to_mp3(text: str, audio_name):
@@ -20,11 +21,11 @@ def text_to_mp3(text: str, audio_name):
     response = client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
     # The response's audio_content is binary.
-    with open(f"../audio/{audio_name}.mp3", "wb") as out:
+    with open(f"{BASE_DIR}\\audio\\{audio_name}.mp3", "wb") as out:
         # Write the response to the output file.
         out.write(response.audio_content)
-        print('Audio content written to file "output.mp3"')
+        print(f'Audio content written to file "{audio_name}.mp3"')
 
 
-text = "Shutting down"
-text_to_mp3(text, "shutdown")
+# text = "I didn't understand that!"
+# text_to_mp3(text, "didnt_understand")
