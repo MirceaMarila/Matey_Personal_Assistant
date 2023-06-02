@@ -18,7 +18,7 @@ class ChromeDriver(webdriver.Chrome):
 class ElementFinder:
     def __init__(self, driver):
         self.driver = driver
-        self.web_driver_wait = WebDriverWait(driver, 10)
+        self.web_driver_wait = WebDriverWait(driver, 30)
 
     def clickable_element(self, locator):
         return self.web_driver_wait.until(ec.element_to_be_clickable(locator))

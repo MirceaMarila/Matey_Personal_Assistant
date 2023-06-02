@@ -1,5 +1,8 @@
 from google.cloud import texttospeech
 from core.settings import BASE_DIR
+import io
+import soundfile
+from core.sound_plotting import load_song
 
 
 def text_to_mp3(text: str, audio_name):
@@ -27,5 +30,5 @@ def text_to_mp3(text: str, audio_name):
         print(f'Audio content written to file "{audio_name}.mp3"')
 
 
-# text = "I didn't understand that!"
-# text_to_mp3(text, "didnt_understand")
+# text = "Restarting"
+# text_to_mp3(text, "restart")

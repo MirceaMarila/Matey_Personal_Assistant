@@ -1,0 +1,42 @@
+Basic:
+------
+Hey Matey
+Thank you
+Exit
+Shut down
+What's your name
+How old are you
+What's your gender
+
+
+ChatGPT:
+--------
+Search ...
+
+
+Explorer:
+---------
+Open ...
+Close ...
+
+
+Weather:
+--------
+How is the weather
+How is the weather in ...
+
+
+Selenium:
+---------
+Play a random song
+Play ...
+Download ...
+
+
+Windows:
+--------
+Set brightness to ... percent
+Increase volume by ... units
+Decrease volume by ... units
+Mute volume
+Unmute volume

@@ -6,7 +6,8 @@ import base64
 import json
 import re
 import time
-from core.utils import play_audio_and_plot_voice, play_audio, process_task
+from core.utils import play_audio_and_plot_voice, play_audio, initialize_winsound
+from core.handle_tasks import process_task
 
 auth_key = 'feff361f26e2458e9a233cd0c9292f8d'
 
@@ -47,6 +48,9 @@ async def send_receive(manager_dict, time1):
 
         async def send():
             while True:
+                if manager_dict['shut_down']:
+                    return
+
                 try:
                     data = stream.read(FRAMES_PER_BUFFER)
                     data = base64.b64encode(data).decode("utf-8")
@@ -66,6 +70,10 @@ async def send_receive(manager_dict, time1):
 
             global time1
             while True:
+
+                if manager_dict['shut_down']:
+                    return
+
                 try:
                     result_str = await _ws.recv()
                     ##############################################################
@@ -80,10 +88,13 @@ async def send_receive(manager_dict, time1):
 
                         elif int(time2 - time1) >= 1 and speech[-1]:
                             if manager_dict['hidden']:
-                                names = ["mate", "made", "matthew", "matt", "mattie", "my be", "my day"]
+                                names = ["mate", "made", "matthew", "matt", "mattie", "my be", "my day", "mati",
+                                         "maddie", "monte", "marty", "monday", "my deep", "madi", "mathi", "my d",
+                                         "my date"]
                                 for name in names:
                                     if 'hey ' + name in speech[-1]:
                                         manager_dict['listen'] = False
+                                        initialize_winsound()
                                         play_audio("start")
                                         manager_dict['hidden'] = False
                                         play_audio_and_plot_voice(manager_dict, "hello")
@@ -100,10 +111,10 @@ async def send_receive(manager_dict, time1):
                                     play_audio_and_plot_voice(manager_dict, "rude")
                                     play_audio("exit")
 
-                                elif 'shut down' in speech[-1]:
+                                elif 'shut down' in speech[-1] or 'shutdown' in speech[-1]:
                                     manager_dict['listen'] = False
                                     play_audio_and_plot_voice(manager_dict, "shutdown")
-                                    sys.exit()
+                                    manager_dict['shut_down'] = True
 
                                 else:
                                     play_audio("ping")
@@ -126,6 +137,14 @@ async def send_receive(manager_dict, time1):
 
 
 def listen(manager_dict, time):
-    global time1
-    time1 = time
-    asyncio.run(send_receive(manager_dict, time1))
+    while True:
+        if manager_dict['shut_down']:
+            break
+
+        try:
+            global time1
+            time1 = time
+            asyncio.run(send_receive(manager_dict, time1))
+
+        except:
+            pass

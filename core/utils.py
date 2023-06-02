@@ -1,31 +1,43 @@
-import datetime
-import os.path
+import time
+import keyboard
+import openai
 from playsound import playsound
 from core.settings import BASE_DIR
 import threading
-from core.sound_plotting import plot_voice
-import win32gui
-import time
-import pythoncom
-from core.handle_tasks import chat_gpt
-from core.text_to_speech import text_to_mp3
 from urllib import request
+import geocoder
+from geopy.geocoders import Nominatim
+import requests
+import datetime
+import difflib
+import psutil
+import io
+import soundfile
 from os import listdir
 from os.path import isfile, join
-import difflib
+import os
+from core.settings import USER
+import winsound
+from core.sound_plotting import load_song
+from core.text_to_speech import text_to_mp3
+from core.web_driver import ChromeDriver, ElementFinder
+from core.web_elements import Button, GenericElement, TextBox
 
 
 def check_internet():
-    try:
-        request.urlopen('http://google.com', timeout=1)
-        return True
+    timeout = 5
+    flag = False
 
-    except:
-        return False
+    while not flag and timeout:
+        try:
+            request.urlopen('http://google.com', timeout=1)
+            flag = True
 
+        except:
+            time.sleep(.5)
+            timeout -= 0.5
 
-def windowEnumerationHandler(hwnd, top_windows):
-    top_windows.append((hwnd, win32gui.GetWindowText(hwnd)))
+    return flag
 
 
 def play_audio(name, manager_dict=None, semaphore=None):
@@ -35,13 +47,16 @@ def play_audio(name, manager_dict=None, semaphore=None):
             pass
 
     if name != 'loading':
-        while True:
-            try:
-                playsound(BASE_DIR + f"\\audio\\{name}.mp3")
-                break
+        if name != 'temp':
+            playsound(BASE_DIR + f"\\audio\\{name}.mp3")
 
-            except:
-                pass
+        else:
+            voice1, sample_rate = load_song(f"{BASE_DIR}\\audio\\temp.mp3")
+            virtual_file = io.BytesIO()
+            soundfile.write(virtual_file, voice1, int(sample_rate), format="WAV")
+            virtual_file.seek(0)
+            winsound.PlaySound(virtual_file.read(), winsound.SND_MEMORY)
+            virtual_file.close()
 
 
 def play_audio_and_plot_voice(manager_dict, name):
@@ -51,68 +66,271 @@ def play_audio_and_plot_voice(manager_dict, name):
     thread.join()
 
 
-def process_task(manager_dict, task):
-    if 'search' in task:
-        if ' and save the result' in task:
-            if check_internet():
+def get_current_city():
+    g = geocoder.ip('me')
+    coord = dict()
 
-                manager_dict['loading'] = True
-                question = task.split('search')[-1].split(' and save the result')[0]
-                result = chat_gpt(task).strip()
-                manager_dict['loading'] = False
+    coord['Latitude'] = g.latlng[0]
+    coord['Longitude'] = g.latlng[1]
 
-                today = datetime.datetime.now().strftime("%d_%m_%Y")
-                filepath = BASE_DIR + f"\\results\\search_results_{today}.txt"
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    coord = f"{coord['Latitude']}, {coord['Longitude']}"
 
-                if os.path.isfile(filepath):
-                    with open(filepath, "r") as file:
-                        text = file.read()
+    location = geolocator.reverse(coord, exactly_one=True)
+    address = location.raw['address']
 
-                    text += f"Q: {question}\nA: {result}\n\n"
+    village = address.get('city', '')
+    city = address.get('city', '')
+    county = address.get('county', '')
 
-                    with open(filepath, "w") as file:
-                        file.write(text)
+    return city if city else village if village else county
 
-                else:
-                    with open(filepath, "w") as file:
-                        file.write(f"Q: {task}\nA: {result}\n\n")
 
-                play_audio_and_plot_voice(manager_dict, "result_saved")
+def get_weather(city):
+    api = "ff8ed9c3bfec39e852053c57df5dbd86"
+    url = 'https://api.openweathermap.org/data/2.5/weather?q={}&appid={}'.format(city, api)
 
-            else:
-                play_audio_and_plot_voice(manager_dict, "no_internet")
+    weather = False
+    try:
+        res = requests.get(url)
+        data = res.json()
 
-        else:
-            if check_internet():
-                manager_dict['loading'] = True
-                result = chat_gpt(task)
-                manager_dict['loading'] = False
-                text_to_mp3(result, "chat_gpt")
-                play_audio_and_plot_voice(manager_dict, "chat_gpt")
+        humidity = data['main']['humidity']
+        pressure = data['main']['pressure']
+        wind = round(float(data['wind']['speed']) * 3.6, 1)
+        description = data['weather'][0]['description']
+        temp = round(float(data['main']['temp']) - 273.15, 1)
 
-            else:
-                play_audio_and_plot_voice(manager_dict, "no_internet")
+        weather = f"Temperature: {temp} °C, Wind: {wind} km/h, Pressure: {pressure} mb, " \
+                  f"Humidity: {humidity} %, Description: {description}"
 
-    elif 'open' in task:
-        manager_dict['loading'] = True
-        program = task.split('open ')[-1]
-        shortcuts_folder = BASE_DIR + "\\shortcuts"
-        shortcuts = [f for f in listdir(shortcuts_folder) if isfile(join(shortcuts_folder, f))]
+    except:
+        pass
 
-        cutoff = 1.0
-        open_program = difflib.get_close_matches(program, shortcuts, 1, cutoff)
-        while not open_program and cutoff >= 0.5:
-            cutoff -= 0.1
-            open_program = difflib.get_close_matches(program, shortcuts, 1, cutoff)
+    finally:
+        return weather
 
-        manager_dict['loading'] = False
-        if not open_program:
-            play_audio_and_plot_voice(manager_dict, "app_not_found")
 
-        else:
-            play_audio_and_plot_voice(manager_dict, "ok")
-            manager_dict['hidden'] = True
-            os.startfile(shortcuts_folder + f"\\{open_program[0]}")
+def chat_gpt(search_text):
+    openai.api_key = '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'
+    model_engine = "text-davinci-003"
+    prompt = search_text + " give me just the result"
+
+    # Generate a response
+    completion = openai.Completion.create(
+        engine=model_engine,
+        prompt=prompt,
+        max_tokens=1024,
+        n=1,
+        stop=None,
+        temperature=0.5,
+    )
+
+    response = completion.choices[0].text
+    return response
+
+
+def save_results(question, answer, file_name):
+    today = datetime.datetime.now().strftime("%d_%m_%Y")
+    folder = BASE_DIR + f"\\results\\{today}"
+
+    if not os.path.isdir(folder):
+        os.mkdir(folder)
+
+    filepath = BASE_DIR + f"\\results\\{today}\\{file_name}_results.txt"
+    if os.path.isfile(filepath):
+        with open(filepath, "r") as file:
+            text = file.read()
+
+        text += f"Q: {question}\nA: {answer}\n\n"
+
+        with open(filepath, "w") as file:
+            file.write(text)
 
     else:
-        play_audio_and_plot_voice(manager_dict, "didnt_understand")
+        with open(filepath, "w") as file:
+            file.write(f"Q: {question}\nA: {answer}\n\n")
+
+
+def get_closest_match(word, words_list, cutoff_min):
+    cutoff = 1.0
+    program = difflib.get_close_matches(word, words_list, 1, cutoff)
+    while not program and cutoff >= cutoff_min:
+        cutoff -= 0.1
+        program = difflib.get_close_matches(word, words_list, 1, cutoff)
+
+    return program
+
+
+def open_close_app(path, open_close):
+
+    def open_close_thread(path, open_close, closed):
+        if open_close == 'open':
+            os.startfile(path)
+
+        else:
+            for p in psutil.process_iter():
+                if path in p.name():
+                    p.kill()
+                    p.terminate()
+                    closed[0] = True
+
+            return closed
+
+    closed = [False]
+    thread = threading.Thread(target=open_close_thread, args=(path, open_close, closed))
+    thread.start()
+    thread.join()
+
+    return closed[0]
+
+
+def initialize_winsound():
+    voice1, sample_rate = load_song(f"{BASE_DIR}\\audio\\silence.mp3")
+    virtual_file = io.BytesIO()
+    soundfile.write(virtual_file, voice1, int(sample_rate), format="WAV")
+    virtual_file.seek(0)
+    winsound.PlaySound(virtual_file.read(), winsound.SND_MEMORY)
+    virtual_file.close()
+
+
+def wait_for_key_pressed_or_time_expired(music_time, driver):
+    class KeyEventThread(threading.Thread):
+        def run(self):
+            timeout = 3
+            while timeout and datetime.datetime.now() < music_time:
+                try:
+                    url = driver.current_url
+                    if keyboard.is_pressed('ctrl'):
+                        timeout -= 1
+                        time.sleep(1)
+
+                    elif timeout < 3:
+                        timeout += 1
+
+                except:
+                    break
+
+    kethread = KeyEventThread()
+    kethread.start()
+    kethread.join()
+    play_audio("ping")
+
+    if driver:
+        try:
+            driver.close()
+            driver.quit()
+        except:
+            pass
+
+
+def play_a_random_song(manager_dict):
+    manager_dict['listen'] = False
+    manager_dict['loading'] = True
+    driver = ChromeDriver(options=['--incognito'])
+    finder = ElementFinder(driver)
+
+    driver.get("https://www.chosic.com/random-songs-generator-with-links-to-spotify-and-youtube/")
+    driver.maximize_window()
+
+    Button(driver, finder, xpath="//button/span[text()=\"AGREE\"]").click()
+    Button(driver, finder, xpath="//button[text()=\"Generate\"]").click()
+
+    finder.invisibility_of_element_located(['xpath', "//div[@class=\"main-loading\"]"])
+    time.sleep(1)
+
+    iframe = GenericElement(driver, finder, xpath="//iframe[@id=\"featured-video\"]", clickable=False)
+    title = iframe.element.get_attribute('title')
+    text_to_mp3(f"Playing {title}. Hold control for 3 seconds to stop the song.", "temp")
+
+    duration = chat_gpt(f"what is the lenght of \"{title}\" song")
+    try:
+        seconds = int(duration.split(' minutes')[0]) * 60 + (
+            0 if 'seconds' not in duration else int(duration.split(' seconds')[0].split('and ')[-1]))
+    except:
+        seconds = 180
+
+    manager_dict['loading'] = False
+    play_audio_and_plot_voice(manager_dict, "temp")
+    manager_dict['hidden'] = True
+
+    iframe.click()
+    finish_time = datetime.datetime.now() + datetime.timedelta(0, seconds)
+    wait_for_key_pressed_or_time_expired(finish_time, driver)
+    manager_dict['listen'] = True
+    play_audio("start")
+    manager_dict['hidden'] = False
+
+
+def play_on_youtube(manager_dict, song):
+    manager_dict['listen'] = False
+    manager_dict['loading'] = True
+    driver = ChromeDriver(options=['--incognito'])
+    finder = ElementFinder(driver)
+
+    driver.get("https://www.youtube.com/")
+    driver.maximize_window()
+
+    GenericElement(driver, finder, "(//tp-yt-paper-dialog//div[@class=\"yt-spec-touch-feedback-shape__stroke\"])[4]", clickable=False).click()
+    time.sleep(1)
+    TextBox(driver, finder, xpath="//input[@id=\"search\"]").write_text(song)
+    Button(driver, finder, xpath="//button[@id=\"search-icon-legacy\"]").click()
+
+    text_to_mp3(f"Playing {song}. Some youtube ads might appear. Hold control for 3 seconds to stop the song.", "temp")
+    duration = chat_gpt(f"what is the lenght of \"{song}\" song")
+    try:
+        seconds = int(duration.split(' minutes')[0]) * 60 + 1 + (
+            0 if 'seconds' not in duration else int(duration.split(' seconds')[0].split('and ')[-1]))
+    except:
+        seconds = 240
+
+    manager_dict['loading'] = False
+    play_audio_and_plot_voice(manager_dict, "temp")
+    manager_dict['hidden'] = True
+
+    Button(driver, finder, xpath="(//ytd-video-renderer//a)[1]").click()
+    finish_time = datetime.datetime.now() + datetime.timedelta(0, seconds)
+    wait_for_key_pressed_or_time_expired(finish_time, driver)
+
+    manager_dict['listen'] = True
+    play_audio("start")
+    manager_dict['hidden'] = False
+
+
+def download_from_youtube(manager_dict, song):
+    manager_dict['loading'] = True
+    manager_dict['listen'] = False
+    driver = ChromeDriver(options=['--incognito'])
+    finder = ElementFinder(driver)
+
+    driver.get("https://www.youtube.com/")
+    driver.maximize_window()
+
+    GenericElement(driver, finder, "(//tp-yt-paper-dialog//div[@class=\"yt-spec-touch-feedback-shape__stroke\"])[4]", clickable=False).click()
+    time.sleep(1)
+
+    TextBox(driver, finder, xpath="//input[@id=\"search\"]").write_text(song)
+    Button(driver, finder, xpath="//button[@id=\"search-icon-legacy\"]").click()
+    Button(driver, finder, xpath="(//ytd-video-renderer//a)[1]").click()
+
+    url = driver.current_url
+    driver.get("https://ytmp3.nu/d06/")
+    TextBox(driver, finder, xpath="//input[@type=\"text\"]").write_text(url)
+    Button(driver, finder, xpath="//input[@type=\"submit\"]").click()
+
+    Button(driver, finder, xpath="//a[@class=\"button\"][contains(text(), \"Download\")]").click()
+    time.sleep(5)
+
+    driver.close()
+    driver.quit()
+
+    path = fr"C:\Users\{USER}\Downloads"
+    downloads_files = [f for f in listdir(path) if isfile(join(path, f))]
+    file_name = get_closest_match('metallica fuel', downloads_files, cutoff_min=0.5)[0]
+    os.rename(fr"{path}\{file_name}", f"{BASE_DIR}\\downloads\\{file_name}")
+
+    manager_dict['loading'] = False
+    manager_dict['listen'] = True
+
+# md = dict()
+# download_from_youtube(md, "metallica enter sandman")

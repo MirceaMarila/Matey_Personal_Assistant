@@ -74,30 +74,38 @@ def interractive_plot_draw(manager_dict, semaphore, audio_name):
 def plot_voice(manager_dict):
 
     while True:
-
-        if manager_dict['plot']:
-
-            voice_name = manager_dict['plot']
-            interractive_plot_draw(manager_dict, True, voice_name)
-
-            manager_dict['listen'] = True
-            manager_dict['plot'] = None
-
-            if voice_name in ['welcome', 'rude'] and plt.get_fignums():
-                plt.close()
-                manager_dict['hidden'] = True
-
-            else:
-                manager_dict['hidden'] = False
-
-        elif not manager_dict['hidden']:
-
-            if not manager_dict['loading']:
-                interractive_plot_draw(manager_dict, False, 'silence')
-
-            else:
-                interractive_plot_draw(manager_dict, False, 'loading')
-
-        else:
+        if manager_dict['shut_down']:
             if plt.get_fignums():
                 plt.close()
+            return
+
+        try:
+            if manager_dict['plot']:
+
+                voice_name = manager_dict['plot']
+                interractive_plot_draw(manager_dict, True, voice_name)
+
+                manager_dict['listen'] = True
+                manager_dict['plot'] = None
+
+                if voice_name in ['welcome', 'rude'] and plt.get_fignums():
+                    plt.close()
+                    manager_dict['hidden'] = True
+
+                else:
+                    manager_dict['hidden'] = False
+
+            elif not manager_dict['hidden']:
+
+                if not manager_dict['loading']:
+                    interractive_plot_draw(manager_dict, False, 'silence')
+
+                else:
+                    interractive_plot_draw(manager_dict, False, 'loading')
+
+            else:
+                if plt.get_fignums():
+                    plt.close()
+
+        except:
+            pass

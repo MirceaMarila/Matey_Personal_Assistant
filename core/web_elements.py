@@ -48,16 +48,8 @@ class WebElement:
 
 
 class Button(WebElement):
-    def __init__(self, driver, finder, xpath=None, tag="button", tag2="input", text=None, attribute="value", value=None):
-        if not xpath:
-            xpath = f"//{tag}//span[contains(text(), \"{text}\")]|" \
-                    f"//{tag}//span//p[contains(text(), \"{text}\")]|" \
-                    f"//{tag2}[@{attribute}=\"{value if value else text}\"]|" \
-                    f"//a[@href]/p[contains(text(), \"{text}\")]|" \
-                    f"//p[contains(text(), \"{text}\")]|" \
-                    f"//li[contains(text(), \"{text}\")]"
-
-        super().__init__(xpath, driver, finder)
+    def __init__(self, driver, finder, xpath=None, clickable=True):
+        super().__init__(driver, finder, xpath, clickable)
 
 
 class TextBox(WebElement):
@@ -72,7 +64,7 @@ class TextBox(WebElement):
                     f"//{tag2}[@{attribute}=\"{value if value else text}\"]|" \
                     f"//{tag2}[@id=\"{value}\"]"
 
-        super().__init__(xpath, driver, finder)
+        super().__init__(driver, finder, xpath)
 
     def write_text(self, text):
         self.scroll_into_view()
@@ -102,4 +94,4 @@ class GenericElement(WebElement):
                     f"//*[not(name()='script')][not(name()='style')][@placeholder=\"{text}\"]|" \
                     f"//*[not(name()='script')][not(name()='style')][@value=\"{text}\"])[last()]"
 
-        super().__init__(xpath, driver, finder, clickable)
+        super().__init__(driver, finder, xpath, clickable)
