@@ -35,8 +35,23 @@ Download ...
 
 Windows:
 --------
-Set brightness to ... percent
-Increase volume by ... units
-Decrease volume by ... units
+Set brightness to ...
+Increase volume by ...
+Decrease volume by ...
 Mute volume
 Unmute volume
+
+
+Translate:
+----------
+Translate in ... ...
+
+
+Location:
+---------
+Where am i
+
+
+Camera:
+-------
+Open camera

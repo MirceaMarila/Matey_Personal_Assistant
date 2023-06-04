@@ -22,3 +22,6 @@ Accessibility Support: Assist users with disabilities by providing voice-control
 Customization and Integration: Allow users to customize the voice assistant's behavior, appearance, or voice to suit their preferences. Additionally, support integration with third-party applications and services to extend functionality and enable voice control over a broader range of tasks.
 
 Remember, these are just a few ideas, and the possibilities are vast. The specific features and capabilities of a voice assistant on Windows would depend on the goals, technical limitations, and user needs of the platform.
+
+
+poza instant

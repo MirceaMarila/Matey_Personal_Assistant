@@ -22,7 +22,7 @@ def load_song(song_path):
     return np.array(data), sample_rate
 
 
-def plot_voice_frame(y):
+def plot_voice_frame(y, manager_dict):
     img_path = f"{BASE_DIR}\\images\\sphere.png"
     img = Image.open(img_path)
     width = img.width
@@ -34,12 +34,20 @@ def plot_voice_frame(y):
     x = np.linspace(0, len(y), len(y))
     img = plt.imread(img_path)
     plt.imshow(img, extent=[0, width, -height/2, height/2])
+    params = {"text.color": "white"}
+    plt.rcParams.update(params)
+
+    if manager_dict['suptitle'] and 'hey' not in manager_dict['suptitle']:
+        plt.suptitle("You: " + manager_dict['suptitle'])
+
+    if manager_dict['title']:
+        plt.title("Matey: " + manager_dict['title'])
 
     fig = pylab.gcf()
     fig.canvas.manager.set_window_title('Matey')
     fig.patch.set_facecolor('black')
 
-    plt.plot(x, y*50, color="white")
+    plt.plot(x/3+120, y*50-20, color="white")
     plt.ylim(-height/2, height/2)
     plt.xlim(0, width)
 
@@ -49,7 +57,7 @@ def plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_secon
     for i, j in zip(range(0, int(sample_rate * nr_of_seconds), tick_samples),
                     range(tick_samples, int(sample_rate * nr_of_seconds), tick_samples)):
         aux = voice[i:j]
-        plot_voice_frame(aux)
+        plot_voice_frame(aux, manager_dict)
 
         if semaphore and manager_dict['semaphore']:
             manager_dict['semaphore'] = False

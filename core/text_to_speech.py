@@ -30,5 +30,5 @@ def text_to_mp3(text: str, audio_name):
         print(f'Audio content written to file "{audio_name}.mp3"')
 
 
-# text = "Restarting"
-# text_to_mp3(text, "restart")
+# text = "Picture saved in the images folder."
+# text_to_mp3(text, "picture_saved")

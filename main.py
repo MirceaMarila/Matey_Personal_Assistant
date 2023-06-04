@@ -13,6 +13,8 @@ if __name__ == "__main__":
     manager_dict['hidden'] = True
     manager_dict['loading'] = False
     manager_dict['shut_down'] = False
+    manager_dict['title'] = False
+    manager_dict['suptitle'] = False
     time1 = time.time()
 
     if not check_internet():

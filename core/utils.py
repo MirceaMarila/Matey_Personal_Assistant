@@ -2,7 +2,6 @@ import time
 import keyboard
 import openai
 from playsound import playsound
-from core.settings import BASE_DIR
 import threading
 from urllib import request
 import geocoder
@@ -22,6 +21,12 @@ from core.sound_plotting import load_song
 from core.text_to_speech import text_to_mp3
 from core.web_driver import ChromeDriver, ElementFinder
 from core.web_elements import Button, GenericElement, TextBox
+import speech_recognition as spr
+import googletrans
+from googletrans import Translator
+from gtts import gTTS
+from core.settings import BASE_DIR
+import cv2
 
 
 def check_internet():
@@ -59,14 +64,16 @@ def play_audio(name, manager_dict=None, semaphore=None):
             virtual_file.close()
 
 
-def play_audio_and_plot_voice(manager_dict, name):
+def play_audio_and_plot_voice(manager_dict, name, text=None):
     thread = threading.Thread(target=play_audio, args=(name, manager_dict, True))
     thread.start()
     manager_dict['plot'] = name
+    if text:
+        manager_dict['title'] = text
     thread.join()
 
 
-def get_current_city():
+def get_current_city(country=False):
     g = geocoder.ip('me')
     coord = dict()
 
@@ -79,11 +86,15 @@ def get_current_city():
     location = geolocator.reverse(coord, exactly_one=True)
     address = location.raw['address']
 
-    village = address.get('city', '')
-    city = address.get('city', '')
-    county = address.get('county', '')
+    if not country:
+        village = address.get('city', '')
+        city = address.get('city', '')
+        county = address.get('county', '')
 
-    return city if city else village if village else county
+        return city if city else village if village else county
+
+    else:
+        return address.get('country', '')
 
 
 def get_weather(city):
@@ -134,21 +145,26 @@ def save_results(question, answer, file_name):
     today = datetime.datetime.now().strftime("%d_%m_%Y")
     folder = BASE_DIR + f"\\results\\{today}"
 
+    if file_name == 'weather':
+        encoding = "windows-1252"
+    else:
+        encoding = "utf-8"
+
     if not os.path.isdir(folder):
         os.mkdir(folder)
 
     filepath = BASE_DIR + f"\\results\\{today}\\{file_name}_results.txt"
     if os.path.isfile(filepath):
-        with open(filepath, "r") as file:
+        with open(filepath, "r", encoding=encoding) as file:
             text = file.read()
 
         text += f"Q: {question}\nA: {answer}\n\n"
 
-        with open(filepath, "w") as file:
+        with open(filepath, "w", encoding=encoding) as file:
             file.write(text)
 
     else:
-        with open(filepath, "w") as file:
+        with open(filepath, "w", encoding=encoding) as file:
             file.write(f"Q: {question}\nA: {answer}\n\n")
 
 
@@ -319,18 +335,143 @@ def download_from_youtube(manager_dict, song):
     Button(driver, finder, xpath="//input[@type=\"submit\"]").click()
 
     Button(driver, finder, xpath="//a[@class=\"button\"][contains(text(), \"Download\")]").click()
-    time.sleep(5)
+    path = fr"C:\Users\{USER}\Downloads"
+    download_wait(path)
 
     driver.close()
     driver.quit()
 
-    path = fr"C:\Users\{USER}\Downloads"
     downloads_files = [f for f in listdir(path) if isfile(join(path, f))]
-    file_name = get_closest_match('metallica fuel', downloads_files, cutoff_min=0.5)[0]
+    file_name = get_closest_match(song, downloads_files, cutoff_min=0.3)[0]
     os.rename(fr"{path}\{file_name}", f"{BASE_DIR}\\downloads\\{file_name}")
 
     manager_dict['loading'] = False
     manager_dict['listen'] = True
 
+
+def download_wait(path_to_downloads):
+    seconds = 0
+    dl_wait = True
+    while dl_wait and seconds < 30:
+        time.sleep(1)
+        dl_wait = False
+        for fname in os.listdir(path_to_downloads):
+            if fname.endswith('.crdownload'):
+                dl_wait = True
+        seconds += 1
+
+
+def translate_text_and_save_mp3(text, to_lang, result):
+    # getting the right language to translate text into
+    languages_dict = dict(googletrans.LANGUAGES)
+    closest_language = get_closest_match(to_lang, languages_dict.values(), cutoff_min=0.5)[0]
+    to_lang = list(languages_dict.keys())[list(languages_dict.values()).index(closest_language)]
+
+    # Translator method for translation
+    translator = Translator()
+
+    # short form of english in which
+    # you will speak
+    from_lang = 'en'
+
+    # Using try and except block to improve
+    # its efficiency.
+    try:
+
+        # Using translate() method which requires
+        # three arguments, 1st the sentence which
+        # needs to be translated 2nd source language
+        # and 3rd to which we need to translate in
+        text_to_translate = translator.translate(text,
+                                                 src=from_lang,
+                                                 dest=to_lang)
+
+        # Storing the translated text in text
+        # variable
+        text = text_to_translate.text
+
+        # Using Google-Text-to-Speech ie, gTTS() method
+        # to speak the translated text into the
+        # destination language which is stored in to_lang.
+        # Also, we have given 3rd argument as False because
+        # by default it speaks very slowly
+        speak = gTTS(text=text, lang=to_lang, slow=False)
+
+        # Using save() method to save the translated
+        # speech in capture_voice.mp3
+        speak.save(BASE_DIR + "\\audio\\temp.mp3")
+
+        result[0] = text
+
+    # Here we are using except block for UnknownValue
+    # and Request Error and printing the same to
+    # provide better service to the user.
+    except spr.UnknownValueError:
+        print("Unable to Understand the Input")
+        result[0] = False
+
+    except spr.RequestError as e:
+        print("Unable to provide Required Output".format(e))
+        result[0] = False
+
+
+def where_am_i():
+    try:
+        country = get_current_city(country=True)
+        city = get_current_city()
+        text = f"{city}, {country}"
+        languages_dict = dict(googletrans.LANGUAGES)
+        closest_language = get_closest_match(country, languages_dict.values(), cutoff_min=0.3)[0]
+        to_lang = list(languages_dict.keys())[list(languages_dict.values()).index(closest_language)]
+        speak = gTTS(text=text, lang=to_lang, slow=False)
+        speak.save(BASE_DIR + "\\audio\\temp.mp3")
+        return text
+
+    except:
+        return False
+
+
+def open_camera_to_take_a_picture():
+    webcam = cv2.VideoCapture(0)
+    time.sleep(2)
+    while True:
+
+        try:
+            check, frame = webcam.read()
+            cv2.imshow("Capturing", frame)
+            key = cv2.waitKey(1)
+
+            if key == ord('s'):
+                today = datetime.datetime.now().strftime("%d_%m_%Y")
+                folder = BASE_DIR + f"\\images\\{today}"
+                timestamp = datetime.datetime.now().strftime("%H_%M_%S")
+
+                if not os.path.isdir(folder):
+                    os.mkdir(folder)
+
+                path = f"{BASE_DIR}\\images\\{today}\\saved_img_{timestamp}.jpg"
+                cv2.imwrite(path, frame)
+                webcam.release()
+
+                img_ = cv2.imread(path, cv2.IMREAD_ANYCOLOR)
+                cv2.imwrite(path, img_)
+                break
+
+            elif key == ord('q'):
+                webcam.release()
+                cv2.destroyAllWindows()
+                break
+
+        except KeyboardInterrupt:
+            webcam.release()
+            cv2.destroyAllWindows()
+            break
+
+        except:
+            break
+
+
 # md = dict()
 # download_from_youtube(md, "metallica enter sandman")
+# translate_text_and_save_mp3("text", "romanian")
+# print(get_current_city())

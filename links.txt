@@ -58,5 +58,13 @@ https://www.geeksforgeeks.org/how-to-control-laptop-screen-brightness-using-pyth
 https://stackoverflow.com/questions/20828752/python-change-master-application-volume
 
 
-Text to Int:
-https://stackoverflow.com/questions/493174/is-there-a-way-to-convert-number-words-to-integers
+Download wait:
+https://stackoverflow.com/questions/34338897/python-selenium-find-out-when-a-download-has-completed
+
+
+Translate:
+https://www.geeksforgeeks.org/language-translator-using-google-api-in-python/
+
+
+Image capturing:
+https://github.com/AlcidesTiago/Capturing-Images-from-Webcam-Using-OpenCV-Python/blob/master/Code/Code.py

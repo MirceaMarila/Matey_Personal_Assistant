@@ -122,8 +122,10 @@ async def send_receive(manager_dict, time1):
                                     process_task(manager_dict, speech[-1])
 
                             speech.append("")
+                            manager_dict['title'] = False
 
                         print(speech)
+                        manager_dict['suptitle'] = speech[-1]
                     ##############################################################
 
                 except websockets.exceptions.ConnectionClosedError as e:
