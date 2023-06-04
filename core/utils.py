@@ -125,11 +125,12 @@ def get_weather(city):
 def chat_gpt(search_text):
     openai.api_key = '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'
     model_engine = "text-davinci-003"
+    prompt = search_text + ". give me just the result"
 
     # Generate a response
     completion = openai.Completion.create(
         engine=model_engine,
-        prompt=search_text,
+        prompt=prompt,
         max_tokens=1024,
         n=1,
         stop=None,
