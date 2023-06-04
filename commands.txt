@@ -12,6 +12,7 @@ What's your gender
 ChatGPT:
 --------
 Search ...
+Tell me a joke
 
 
 Explorer:

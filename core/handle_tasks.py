@@ -20,9 +20,13 @@ def process_task(manager_dict, task):
     try:
         if 'search' in task or 'tell me a joke' in task:
             manager_dict['loading'] = True
-            result = chat_gpt(task).strip()
+            result = chat_gpt(task.split('search ').strip() if 'search' in task else task).strip()
             text_to_mp3(result, "temp")
             manager_dict['loading'] = False
+
+            if 'tell me a joke' in task:
+                manager_dict['suptitle'] = False
+
             play_audio_and_plot_voice(manager_dict, "temp", result)
             save_results(task, result.replace('\n', ' '), 'search')
 
