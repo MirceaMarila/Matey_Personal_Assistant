@@ -1,9 +1,70 @@
 Speech to text:
-https://www.geeksforgeeks.org/python-convert-speech-to-text-and-text-to-speech/
 https://github.com/AssemblyAI/youtube-tutorials/blob/main/real-time-python/main.py
+
 
 Real time sound plotting:
 https://medium.com/geekculture/real-time-audio-wave-visualization-in-python-b1c5b96e2d39
 
+
 Text to speech:
-https://python.plainenglish.io/how-to-convert-text-to-speech-in-python-c9aeaaf8d2c1
+https://cloud.google.com/text-to-speech/docs/libraries
+
+
+Sounds:
+https://pixabay.com/sound-effects
+https://github.com/anars/blank-audio/blob/master/1-second-of-silence.mp3
+
+
+Google api credentials:
+https://cloud.google.com/text-to-speech/docs/samples/tts-synthesize-text-audio-profile
+https://cloud.google.com/sdk/docs/install
+https://console.cloud.google.com/billing/01A80F-F43B0C-3B99B2?project=circular-shore-387615&authuser=1
+
+
+Chat GPT api:
+https://www.codingthesmartway.com/how-to-use-chatgpt-with-python/
+
+
+Check internet:
+https://stackoverflow.com/questions/3764291/how-can-i-see-if-theres-an-available-and-active-network-connection-in-python
+
+
+Matey Google Account:
+matey.voice.assistant@gmail.com
+MateyVoiceAssistant
+
+
+Weather API:
+https://www.instructables.com/Get-Weather-Data-Using-Python-and-Openweather-API/
+https://openweathermap.org/current#name
+
+
+Location:
+https://stackoverflow.com/questions/69409255/how-to-get-city-state-and-country-from-a-list-of-latitude-and-longitude-coordi
+https://stackoverflow.com/questions/24906833/how-to-access-current-location-of-any-user-using-python
+
+
+Random song:
+https://www.chosic.com/random-songs-generator-with-links-to-spotify-and-youtube/
+
+
+Key Holding Trigger:
+https://stackoverflow.com/questions/18257522/python-detect-keypress
+https://stackoverflow.com/questions/24072790/how-to-detect-key-presses
+
+
+Brightness/Volume manupulation:
+https://www.geeksforgeeks.org/how-to-control-laptop-screen-brightness-using-python/
+https://stackoverflow.com/questions/20828752/python-change-master-application-volume
+
+
+Download wait:
+https://stackoverflow.com/questions/34338897/python-selenium-find-out-when-a-download-has-completed
+
+
+Translate:
+https://www.geeksforgeeks.org/language-translator-using-google-api-in-python/
+
+
+Image capturing:
+https://github.com/AlcidesTiago/Capturing-Images-from-Webcam-Using-OpenCV-Python/blob/master/Code/Code.py

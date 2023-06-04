@@ -1,0 +1,59 @@
+Basic:
+------
+Hey Matey
+Thank you
+Exit
+Shut down
+What's your name
+How old are you
+What's your gender
+What do you think about cortana
+
+
+ChatGPT:
+--------
+Search ...
+Tell me a joke
+
+
+Explorer:
+---------
+Open ...
+Close ...
+
+
+Weather:
+--------
+How is the weather
+How is the weather in ...
+
+
+Selenium:
+---------
+Play a random song
+Play ...
+Download ...
+
+
+Windows:
+--------
+Set brightness to ...
+Increase volume by ...
+Decrease volume by ...
+Mute volume
+Unmute volume
+
+
+Translate:
+----------
+Translate in ... ...
+
+
+Location:
+---------
+Where am i
+
+
+Camera:
+-------
+Open camera
