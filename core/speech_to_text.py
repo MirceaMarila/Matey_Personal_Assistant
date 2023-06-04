@@ -90,7 +90,7 @@ async def send_receive(manager_dict, time1):
                             if manager_dict['hidden']:
                                 names = ["mate", "made", "matthew", "matt", "mattie", "my be", "my day", "mati",
                                          "maddie", "monte", "marty", "monday", "my deep", "madi", "mathi", "my d",
-                                         "my date"]
+                                         "my date", "my faith", "marte"]
                                 for name in names:
                                     if 'hey ' + name in speech[-1]:
                                         manager_dict['listen'] = False

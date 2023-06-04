@@ -20,7 +20,7 @@ def process_task(manager_dict, task):
     try:
         if 'search' in task or 'tell me a joke' in task:
             manager_dict['loading'] = True
-            result = chat_gpt(task.split('search ').strip() if 'search' in task else task).strip()
+            result = chat_gpt(task.split('search ')[-1].strip() if 'search' in task else task).strip()
             text_to_mp3(result, "temp")
             manager_dict['loading'] = False
 
@@ -30,7 +30,7 @@ def process_task(manager_dict, task):
             play_audio_and_plot_voice(manager_dict, "temp", result)
             save_results(task, result.replace('\n', ' '), 'search')
 
-        elif 'weather' in task:
+        elif 'how is the weather' in task:
             manager_dict['loading'] = True
             if 'weather in' in task:
                 city = task.split('weather in')[-1].strip()
@@ -262,8 +262,10 @@ def process_task(manager_dict, task):
         elif 'your gender' in task:
             play_audio_and_plot_voice(manager_dict, "gender")
 
-        elif 'walrus' in task:
-            play_audio_and_plot_voice(manager_dict, "walrus")
+        elif 'think about cortana' in task:
+            play_audio_and_plot_voice(manager_dict, "cortana")
+        # elif 'walrus' in task:
+        #     play_audio_and_plot_voice(manager_dict, "walrus")
 
         else:
             play_audio_and_plot_voice(manager_dict, "didnt_understand")

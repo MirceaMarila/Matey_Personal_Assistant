@@ -7,6 +7,7 @@ Shut down
 What's your name
 How old are you
 What's your gender
+What do you think about cortana
 
 
 ChatGPT:
