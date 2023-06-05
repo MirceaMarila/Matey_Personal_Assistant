@@ -47,7 +47,7 @@ def plot_voice_frame(y, manager_dict):
     fig.canvas.manager.set_window_title('Matey')
     fig.patch.set_facecolor('black')
 
-    plt.plot(x/3+120, y*50-20, color="white")
+    plt.plot(x/4.4+120, y*50-20, color="white")
     plt.ylim(-height/2, height/2)
     plt.xlim(0, width)
 
@@ -73,7 +73,7 @@ def interractive_plot_draw(manager_dict, semaphore, audio_name):
 
     voice, sample_rate = load_song(voice_path)
     nr_of_seconds = len(voice) / sample_rate
-    tick_in_seconds = 0.05
+    tick_in_seconds = 0.073
 
     tick_samples = int(sample_rate * tick_in_seconds)
     plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)
