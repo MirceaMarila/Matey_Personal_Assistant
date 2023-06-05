@@ -2,7 +2,7 @@ import time
 from core.sound_plotting import plot_voice
 from multiprocessing import Process, Manager
 from core.speech_to_text import listen
-from core.utils import check_internet, play_audio, play_audio_and_plot_voice, initialize_winsound
+from core.utils import check_internet, play_audio, play_audio_and_plot_voice
 
 
 if __name__ == "__main__":
