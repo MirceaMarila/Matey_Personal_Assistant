@@ -313,7 +313,7 @@ def play_on_youtube(manager_dict, song):
     manager_dict['hidden'] = False
 
 
-def download_from_youtube(manager_dict, song):
+def download_from_youtube(manager_dict, song, downloaded):
     manager_dict['loading'] = True
     manager_dict['listen'] = False
     driver = ChromeDriver(options=['--incognito'])
@@ -347,6 +347,7 @@ def download_from_youtube(manager_dict, song):
 
     manager_dict['loading'] = False
     manager_dict['listen'] = True
+    downloaded[0] = True
 
 
 def download_wait(path_to_downloads):

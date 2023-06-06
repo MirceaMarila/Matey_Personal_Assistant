@@ -137,20 +137,19 @@ def process_task(manager_dict, task):
             text = f"Ok! Downloading {song}"
             text_to_mp3(text, "temp")
             play_audio_and_plot_voice(manager_dict, "temp", text)
-            downloaded = False
+            downloaded = [False]
 
             try:
-                play_process = Process(target=download_from_youtube, args=(manager_dict, song))
+                play_process = Process(target=download_from_youtube, args=(manager_dict, song, downloaded))
                 play_process.start()
                 play_process.join()
-                downloaded = True
 
             except:
-                downloaded = False
+                pass
 
             finally:
                 manager_dict['loading'] = False
-                if downloaded:
+                if downloaded[0]:
                     play_audio_and_plot_voice(manager_dict, "download")
                 else:
                     play_audio_and_plot_voice(manager_dict, "try_again")
