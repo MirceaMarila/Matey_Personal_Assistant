@@ -154,7 +154,7 @@ def process_task(manager_dict, task):
                 else:
                     play_audio_and_plot_voice(manager_dict, "try_again")
 
-        elif 'set brightness to' in task:
+        elif 'set brightness to' in task or 'set the brightness to' in task:
             brightness = w2n.word_to_num(task.split('set brightness to ')[-1].strip())
             sbc.set_brightness(brightness)
             text = f"Brightness set to {brightness}%"
