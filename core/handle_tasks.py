@@ -161,7 +161,7 @@ def process_task(manager_dict, task):
             text_to_mp3(text, "temp")
             play_audio_and_plot_voice(manager_dict, "temp", text)
 
-        elif 'increase volume' in task or 'increased volume' in task:
+        elif 'increase volume' in task or 'increased volume' in task or 'increase the volume' in task:
             units = w2n.word_to_num(task.split('increase volume by ')[-1].strip())
             keyboard = Controller()
 
@@ -174,7 +174,7 @@ def process_task(manager_dict, task):
             text_to_mp3(text, "temp")
             play_audio_and_plot_voice(manager_dict, "temp", text)
 
-        elif 'decrease volume' in task or 'decreased volume' in task:
+        elif 'decrease volume' in task or 'decreased volume' in task or 'decrease the volume' in task:
             units = w2n.word_to_num(task.split('decrease volume by ')[-1].strip())
             keyboard = Controller()
 
