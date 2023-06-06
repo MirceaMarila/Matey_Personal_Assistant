@@ -68,6 +68,7 @@ def process_task(manager_dict, task):
             camera_process.start()
             camera_process.join()
             manager_dict['loading'] = False
+            manager_dict['title'] = "Picture saved in the images folder!"
             play_audio_and_plot_voice(manager_dict, "picture_saved")
 
         elif 'open' in task:
@@ -79,15 +80,12 @@ def process_task(manager_dict, task):
 
             manager_dict['loading'] = False
             if not open_program:
-
                 play_audio_and_plot_voice(manager_dict, "app_not_found")
 
             else:
                 text = f"Opening {open_program[0].split(' - ')[0].split('.exe')[0]}"
                 text_to_mp3(text, "temp")
                 play_audio_and_plot_voice(manager_dict, "temp", text)
-                manager_dict['hidden'] = True
-                play_audio('exit')
                 open_close_app(shortcuts_folder + f"\\{open_program[0]}", "open")
 
         elif 'close' in task:
