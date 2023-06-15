@@ -1,16 +1,10 @@
-import time
-
-import pylab
-from PIL import Image
+import librosa
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import librosa
-import timeit
-import random
-from multiprocessing import Pool
-from tqdm import tqdm
-import os
-import matplotlib as mpl
+import pylab
+from PIL import Image
+
 from core.settings import BASE_DIR
 
 
@@ -73,7 +67,7 @@ def interractive_plot_draw(manager_dict, semaphore, audio_name):
 
     voice, sample_rate = load_song(voice_path)
     nr_of_seconds = len(voice) / sample_rate
-    tick_in_seconds = 0.073
+    tick_in_seconds = manager_dict['tick_in_seconds']
 
     tick_samples = int(sample_rate * tick_in_seconds)
     plot_and_show_voice(manager_dict, semaphore, voice, sample_rate, nr_of_seconds, tick_samples, tick_in_seconds)

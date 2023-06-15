@@ -1,26 +1,27 @@
 import datetime
+import threading
+import time
+from multiprocessing import Process
 from os import listdir
 from os.path import isfile, join
+
+import screen_brightness_control as sbc
+from pynput.keyboard import Key, Controller
+from word2number import w2n
+
 from core.settings import BASE_DIR
 from core.text_to_speech import text_to_mp3
 from core.utils import play_audio_and_plot_voice, chat_gpt, get_weather, get_current_city, save_results, \
-    get_closest_match, play_audio, open_close_app, play_a_random_song, play_on_youtube, download_from_youtube, \
+    get_closest_match, open_close_app, play_a_random_song, play_on_youtube, download_from_youtube, \
     translate_text_and_save_mp3, where_am_i, open_camera_to_take_a_picture
-from multiprocessing import Process
-import threading
-import screen_brightness_control as sbc
-from pynput.keyboard import Key, Controller
-import time
-from word2number import w2n
-import os
-import sys
 
 
 def process_task(manager_dict, task):
     try:
         if 'search' in task or 'tell me a joke' in task:
             manager_dict['loading'] = True
-            result = chat_gpt(task.split('search ')[-1].strip() if 'search' in task else task).strip()
+            result = chat_gpt(task.split('search ')[-1].strip() if 'search' in task else task,
+                              manager_dict['chatgpt_api_key']).strip()
             text_to_mp3(result, "temp")
             manager_dict['loading'] = False
 
@@ -34,7 +35,7 @@ def process_task(manager_dict, task):
             manager_dict['loading'] = True
             if 'weather in' in task:
                 city = task.split('weather in')[-1].strip()
-                weather = get_weather(city)
+                weather = get_weather(city, manager_dict['openweather_api_key'])
                 manager_dict['loading'] = False
 
                 if weather:
@@ -51,7 +52,7 @@ def process_task(manager_dict, task):
                     play_audio_and_plot_voice(manager_dict, "no_city")
 
                 else:
-                    weather = get_weather(city)
+                    weather = get_weather(city, manager_dict['openweather_api_key'])
                     manager_dict['loading'] = False
 
                     if weather:
@@ -137,22 +138,16 @@ def process_task(manager_dict, task):
             text = f"Ok! Downloading {song}"
             text_to_mp3(text, "temp")
             play_audio_and_plot_voice(manager_dict, "temp", text)
-            downloaded = [False]
 
             try:
-                play_process = Process(target=download_from_youtube, args=(manager_dict, song, downloaded))
+                play_process = Process(target=download_from_youtube, args=(manager_dict, song))
                 play_process.start()
                 play_process.join()
+                manager_dict['loading'] = False
+                play_audio_and_plot_voice(manager_dict, "download")
 
             except:
-                pass
-
-            finally:
-                manager_dict['loading'] = False
-                if downloaded[0]:
-                    play_audio_and_plot_voice(manager_dict, "download")
-                else:
-                    play_audio_and_plot_voice(manager_dict, "try_again")
+                play_audio_and_plot_voice(manager_dict, "try_again")
 
         elif 'set brightness to' in task or 'set the brightness to' in task:
             brightness = w2n.word_to_num(task.split('set brightness to ')[-1].strip())
@@ -261,8 +256,9 @@ def process_task(manager_dict, task):
 
         elif 'think about cortana' in task:
             play_audio_and_plot_voice(manager_dict, "cortana")
-        # elif 'walrus' in task:
-        #     play_audio_and_plot_voice(manager_dict, "walrus")
+
+        elif 'walrus' in task:
+            play_audio_and_plot_voice(manager_dict, "walrus")
 
         else:
             play_audio_and_plot_voice(manager_dict, "didnt_understand")
@@ -272,6 +268,3 @@ def process_task(manager_dict, task):
         manager_dict['hidden'] = False
         manager_dict['loading'] = False
         play_audio_and_plot_voice(manager_dict, "try_again")
-
-
-# process_task(None, "play a random song")

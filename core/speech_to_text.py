@@ -1,15 +1,14 @@
-import sys
-import pyaudio
-import websockets
 import asyncio
 import base64
 import json
 import re
 import time
-from core.utils import play_audio_and_plot_voice, play_audio, initialize_winsound
-from core.handle_tasks import process_task
 
-auth_key = 'feff361f26e2458e9a233cd0c9292f8d'
+import pyaudio
+import websockets
+
+from core.handle_tasks import process_task
+from core.utils import play_audio_and_plot_voice, play_audio, initialize_winsound
 
 FRAMES_PER_BUFFER = 3200
 FORMAT = pyaudio.paInt16
@@ -17,7 +16,6 @@ CHANNELS = 1
 RATE = 16000
 p = pyaudio.PyAudio()
 
-# starts recording
 stream = p.open(
     format=FORMAT,
     channels=CHANNELS,
@@ -26,9 +24,7 @@ stream = p.open(
     frames_per_buffer=FRAMES_PER_BUFFER
 )
 
-# the AssemblyAI endpoint we're going to hit
 URL = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000"
-
 speech = [""]
 
 
@@ -36,7 +32,7 @@ async def send_receive(manager_dict, time1):
     print(f'Connecting websocket to url ${URL}')
     async with websockets.connect(
             URL,
-            extra_headers=(("Authorization", auth_key),),
+            extra_headers=(("Authorization", manager_dict['assemblyai_api_key']),),
             ping_interval=5,
             ping_timeout=20
     ) as _ws:
@@ -91,6 +87,7 @@ async def send_receive(manager_dict, time1):
                                 names = ["mate", "made", "matthew", "matt", "mattie", "my be", "my day", "mati",
                                          "maddie", "monte", "marty", "monday", "my deep", "madi", "mathi", "my d",
                                          "my date", "my faith", "marte"]
+
                                 for name in names:
                                     if 'hey ' + name in speech[-1]:
                                         manager_dict['listen'] = False

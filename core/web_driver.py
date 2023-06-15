@@ -4,9 +4,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class ChromeDriver(webdriver.Chrome):
-    def __init__(self, options=None):
+    def __init__(self, options=None, chrome_exe_location=None):
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.binary_location = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+        chrome_options.binary_location = chrome_exe_location if chrome_exe_location else\
+            "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
 
         if options:
             for option in options:

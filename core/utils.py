@@ -1,32 +1,34 @@
-import time
-import keyboard
-import openai
-from playsound import playsound
-import threading
-from urllib import request
-import geocoder
-from geopy.geocoders import Nominatim
-import requests
 import datetime
 import difflib
-import psutil
 import io
-import soundfile
+import json
+import os
+import threading
+import time
 from os import listdir
 from os.path import isfile, join
-import os
-from core.settings import USER
+from urllib import request
+
+import cv2
+import geocoder
+import googletrans
+import keyboard
+import openai
+import psutil
+import requests
+import soundfile
+import speech_recognition as spr
 import winsound
+from geopy.geocoders import Nominatim
+from googletrans import Translator
+from gtts import gTTS
+from playsound import playsound
+
+from core.settings import BASE_DIR
 from core.sound_plotting import load_song
 from core.text_to_speech import text_to_mp3
 from core.web_driver import ChromeDriver, ElementFinder
 from core.web_elements import Button, GenericElement, TextBox
-import speech_recognition as spr
-import googletrans
-from googletrans import Translator
-from gtts import gTTS
-from core.settings import BASE_DIR
-import cv2
 
 
 def check_internet():
@@ -43,6 +45,13 @@ def check_internet():
             timeout -= 0.5
 
     return flag
+
+
+def read_from_config_json(key):
+    file = open(BASE_DIR + "\\config.json")
+    config_dict = json.load(file)
+    file.close()
+    return config_dict[key]
 
 
 def play_audio(name, manager_dict=None, semaphore=None):
@@ -97,8 +106,8 @@ def get_current_city(country=False):
         return address.get('country', '')
 
 
-def get_weather(city):
-    api = "ff8ed9c3bfec39e852053c57df5dbd86"
+def get_weather(city, openweather_api_key):
+    api = openweather_api_key
     url = 'https://api.openweathermap.org/data/2.5/weather?q={}&appid={}'.format(city, api)
 
     weather = False
@@ -122,12 +131,11 @@ def get_weather(city):
         return weather
 
 
-def chat_gpt(search_text):
-    openai.api_key = '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'
+def chat_gpt(search_text, chatgpt_api_key):
+    openai.api_key = chatgpt_api_key
     model_engine = "text-davinci-003"
     prompt = search_text + ". give me just the result"
 
-    # Generate a response
     completion = openai.Completion.create(
         engine=model_engine,
         prompt=prompt,
@@ -243,7 +251,7 @@ def wait_for_key_pressed_or_time_expired(music_time, driver):
 def play_a_random_song(manager_dict):
     manager_dict['listen'] = False
     manager_dict['loading'] = True
-    driver = ChromeDriver(options=['--incognito'])
+    driver = ChromeDriver(options=['--incognito'], chrome_exe_location=manager_dict['chrome_exe_path'])
     finder = ElementFinder(driver)
 
     driver.get("https://www.chosic.com/random-songs-generator-with-links-to-spotify-and-youtube/")
@@ -281,7 +289,7 @@ def play_a_random_song(manager_dict):
 def play_on_youtube(manager_dict, song):
     manager_dict['listen'] = False
     manager_dict['loading'] = True
-    driver = ChromeDriver(options=['--incognito'])
+    driver = ChromeDriver(options=['--incognito'], chrome_exe_location=manager_dict['chrome_exe_path'])
     finder = ElementFinder(driver)
 
     driver.get("https://www.youtube.com/")
@@ -313,10 +321,10 @@ def play_on_youtube(manager_dict, song):
     manager_dict['hidden'] = False
 
 
-def download_from_youtube(manager_dict, song, downloaded):
+def download_from_youtube(manager_dict, song):
     manager_dict['loading'] = True
     manager_dict['listen'] = False
-    driver = ChromeDriver(options=['--incognito'])
+    driver = ChromeDriver(options=['--incognito'], chrome_exe_location=manager_dict['chrome_exe_path'])
     finder = ElementFinder(driver)
 
     driver.get("https://www.youtube.com/")
@@ -335,7 +343,7 @@ def download_from_youtube(manager_dict, song, downloaded):
     Button(driver, finder, xpath="//input[@type=\"submit\"]").click()
 
     Button(driver, finder, xpath="//a[@class=\"button\"][contains(text(), \"Download\")]").click()
-    path = fr"C:\Users\{USER}\Downloads"
+    path = fr"C:\Users\{manager_dict['windows_user']}\Downloads"
     download_wait(path)
 
     driver.close()
@@ -347,7 +355,6 @@ def download_from_youtube(manager_dict, song, downloaded):
 
     manager_dict['loading'] = False
     manager_dict['listen'] = True
-    downloaded[0] = True
 
 
 def download_wait(path_to_downloads):
@@ -363,50 +370,24 @@ def download_wait(path_to_downloads):
 
 
 def translate_text_and_save_mp3(text, to_lang, result):
-    # getting the right language to translate text into
     languages_dict = dict(googletrans.LANGUAGES)
     closest_language = get_closest_match(to_lang, languages_dict.values(), cutoff_min=0.5)[0]
     to_lang = list(languages_dict.keys())[list(languages_dict.values()).index(closest_language)]
 
-    # Translator method for translation
     translator = Translator()
-
-    # short form of english in which
-    # you will speak
     from_lang = 'en'
 
-    # Using try and except block to improve
-    # its efficiency.
     try:
-
-        # Using translate() method which requires
-        # three arguments, 1st the sentence which
-        # needs to be translated 2nd source language
-        # and 3rd to which we need to translate in
         text_to_translate = translator.translate(text,
                                                  src=from_lang,
                                                  dest=to_lang)
 
-        # Storing the translated text in text
-        # variable
         text = text_to_translate.text
-
-        # Using Google-Text-to-Speech ie, gTTS() method
-        # to speak the translated text into the
-        # destination language which is stored in to_lang.
-        # Also, we have given 3rd argument as False because
-        # by default it speaks very slowly
         speak = gTTS(text=text, lang=to_lang, slow=False)
-
-        # Using save() method to save the translated
-        # speech in capture_voice.mp3
         speak.save(BASE_DIR + "\\audio\\temp.mp3")
 
         result[0] = text
 
-    # Here we are using except block for UnknownValue
-    # and Request Error and printing the same to
-    # provide better service to the user.
     except spr.UnknownValueError:
         print("Unable to Understand the Input")
         result[0] = False
@@ -470,9 +451,3 @@ def open_camera_to_take_a_picture():
 
         except:
             break
-
-
-# md = dict()
-# download_from_youtube(md, "metallica enter sandman")
-# translate_text_and_save_mp3("text", "romanian")
-# print(get_current_city())
